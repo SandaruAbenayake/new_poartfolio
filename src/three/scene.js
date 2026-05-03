@@ -3,23 +3,136 @@ import { applyMouseAnimation } from "./mouseAnimation";
 import { createProjectCarousel } from "./projectCarousel";
 import { applyScrollAnimation } from "./scrollAnimation";
 
+// Each entry: slug = simple-icons CDN slug, color = brand hex
 const techStack = [
-  "HTML",
-  "CSS",
-  "JavaScript",
-  "React",
-  "Flutter",
-  "Node.js",
-  "Java",
-  "PHP",
-  "Express",
-  "MySQL",
-  "Firebase",
-  "MongoDB",
-  "Git",
-  "Python",
-  "Machine Learning",
+  { label: "HTML",             slug: "html5",       color: "#e34f26" },
+  { label: "CSS",              slug: "css3",        color: "#1572b6" },
+  { label: "JavaScript",       slug: "javascript",  color: "#f7df1e" },
+  { label: "React",            slug: "react",       color: "#61dafb" },
+  { label: "Flutter",          slug: "flutter",     color: "#02569b" },
+  { label: "Node.js",          slug: "nodedotjs",   color: "#5fa04e" },
+  { label: "Java",             slug: "openjdk",     color: "#437291" },
+  { label: "PHP",              slug: "php",         color: "#777bb4" },
+  { label: "Express",          slug: "express",     color: "#ffffff" },
+  { label: "MySQL",            slug: "mysql",       color: "#4479a1" },
+  { label: "Firebase",         slug: "firebase",    color: "#dd2c00" },
+  { label: "MongoDB",          slug: "mongodb",     color: "#47a248" },
+  { label: "Git",              slug: "git",         color: "#f05032" },
+  { label: "Python",           slug: "python",      color: "#3776ab" },
+  { label: "Machine Learning", slug: "tensorflow",  color: "#ff6f00" },
 ];
+
+// Cache SVG blob URLs so each icon is only fetched once
+const svgCache = {};
+
+async function loadSimpleIcon(slug, color) {
+  const key = `${slug}-${color}`;
+  if (svgCache[key]) return svgCache[key];
+  try {
+    const res = await fetch(`https://cdn.simpleicons.org/${slug}/${color.replace("#", "")}`);
+    const svgText = await res.text();
+    const blob = new Blob([svgText], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    svgCache[key] = url;
+    return url;
+  } catch {
+    return null;
+  }
+}
+
+async function createTechIconTexture(slug, brandColor) {
+  const size = 256;
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+  const canvas = document.createElement("canvas");
+  canvas.width = size * pixelRatio;
+  canvas.height = size * pixelRatio;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(pixelRatio, pixelRatio);
+
+  // Dark circle background
+  ctx.clearRect(0, 0, size, size);
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2 - 4, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(3, 7, 18, 0.85)";
+  ctx.fill();
+
+  // Neon glow ring in brand color
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2 - 4, 0, Math.PI * 2);
+  ctx.strokeStyle = brandColor;
+  ctx.lineWidth = 3;
+  ctx.shadowColor = brandColor;
+  ctx.shadowBlur = 24;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Draw brand SVG icon centered with glow
+  const iconUrl = await loadSimpleIcon(slug, brandColor);
+  if (iconUrl) {
+    await new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const padding = size * 0.25;
+        ctx.shadowColor = brandColor;
+        ctx.shadowBlur = 18;
+        ctx.drawImage(img, padding, padding, size - padding * 2, size - padding * 2);
+        ctx.shadowBlur = 0;
+        resolve();
+      };
+      img.onerror = resolve;
+      img.src = iconUrl;
+    });
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+async function createTechOrbit() {
+  const group = new THREE.Group();
+  const disposables = [];
+
+  // Load all icons in parallel
+  await Promise.all(
+    techStack.map(async ({ slug, color }, index) => {
+      const texture = await createTechIconTexture(slug, color);
+      const material = new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        opacity: 0.92,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      });
+
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.72), material);
+      const angle = (index / techStack.length) * Math.PI * 2;
+
+      mesh.position.set(
+        Math.cos(angle) * 8.2,
+        Math.sin(angle * 2) * 0.38,
+        Math.sin(angle) * 3.8
+      );
+      mesh.userData = {
+        angle,
+        radiusX: 8.2,
+        radiusZ: 3.8,
+        phase: index * 0.73,
+      };
+      group.add(mesh);
+      disposables.push(texture, material, mesh.geometry);
+    })
+  );
+
+  group.rotation.x = -0.3;
+  group.position.y = -0.15;
+  group.userData.dispose = () => {
+    disposables.forEach((item) => item.dispose?.());
+  };
+
+  return group;
+}
 
 function createTextPlane(lines, width = 12, height = 6) {
   const canvas = document.createElement("canvas");
@@ -55,90 +168,6 @@ function createTextPlane(lines, width = 12, height = 6) {
   };
 
   return mesh;
-}
-
-function createTechLabelTexture(label) {
-  const canvas = document.createElement("canvas");
-  const width = 512;
-  const height = 180;
-  const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-  canvas.width = width * pixelRatio;
-  canvas.height = height * pixelRatio;
-
-  const context = canvas.getContext("2d");
-  context.scale(pixelRatio, pixelRatio);
-  context.clearRect(0, 0, width, height);
-
-  const gradient = context.createLinearGradient(0, 0, width, height);
-  gradient.addColorStop(0, "rgba(14, 165, 233, 0.88)");
-  gradient.addColorStop(1, "rgba(245, 158, 11, 0.82)");
-
-  context.fillStyle = "rgba(3, 7, 18, 0.72)";
-  context.strokeStyle = gradient;
-  context.lineWidth = 2;
-  roundRect(context, 28, 38, width - 56, 88, 44);
-  context.fill();
-  context.stroke();
-
-  context.shadowColor = "rgba(56, 189, 248, 0.7)";
-  context.shadowBlur = 20;
-  context.fillStyle = "#f8fafc";
-  context.font = label.length > 12 ? "700 38px Inter, Arial, sans-serif" : "800 46px Inter, Arial, sans-serif";
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-  context.fillText(label, width / 2, 82);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.needsUpdate = true;
-  return texture;
-}
-
-function roundRect(context, x, y, width, height, radius) {
-  context.beginPath();
-  context.moveTo(x + radius, y);
-  context.arcTo(x + width, y, x + width, y + height, radius);
-  context.arcTo(x + width, y + height, x, y + height, radius);
-  context.arcTo(x, y + height, x, y, radius);
-  context.arcTo(x, y, x + width, y, radius);
-  context.closePath();
-}
-
-function createTechOrbit() {
-  const group = new THREE.Group(); // ← keep this line
-  const disposables = [];
-
-  techStack.forEach((label, index) => {
-    const texture = createTechLabelTexture(label);
-    const material = new THREE.MeshBasicMaterial({
-      map: texture,
-      transparent: true,
-      opacity: 0.9,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-    });
-    const width = label.length > 12 ? 2.25 : 1.65;
-    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, 0.58), material);
-    const angle = (index / techStack.length) * Math.PI * 2;
-
-    mesh.position.set(Math.cos(angle) * 8.2, Math.sin(angle * 2) * 0.38, Math.sin(angle) * 3.8);
-    mesh.userData = {
-      angle,
-      radiusX: 8.2,
-      radiusZ: 3.8,
-      phase: index * 0.73,
-    };
-    group.add(mesh);
-    disposables.push(texture, material, mesh.geometry);
-  });
-
-  group.rotation.x = -0.3;
-  group.position.y = -0.15;
-  group.userData.dispose = () => {
-    disposables.forEach((item) => item.dispose?.());
-  };
-
-  return group;
 }
 
 function createHeroParticles(count = 1100) {
@@ -262,8 +291,9 @@ export async function createPortfolioScene({ canvas, projects, profile }) {
   scene.add(heroGroup, workGroup, aboutGroup, contactGroup);
 
   const heroParticles = createHeroParticles();
-  const techOrbit = createTechOrbit();
-  heroGroup.add(heroParticles, techOrbit); // grid removed
+  // async — fetches icons from cdn.simpleicons.org in parallel
+  const techOrbit = await createTechOrbit();
+  heroGroup.add(heroParticles, techOrbit);
 
   const projectCarousel = createProjectCarousel(THREE, projects);
   projectCarousel.position.z = -3;
