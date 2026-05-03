@@ -105,20 +105,9 @@ function roundRect(context, x, y, width, height, radius) {
 }
 
 function createTechOrbit() {
-  const group = new THREE.Group();
-  const orbitMaterial = new THREE.MeshBasicMaterial({
-    color: 0x38bdf8,
-    transparent: true,
-    opacity: 0.2,
-    side: THREE.DoubleSide,
-  });
+  const group = new THREE.Group(); // ← keep this line
+  const disposables = [];
 
-  const orbitLine = new THREE.Mesh(new THREE.TorusGeometry(5.85, 0.006, 8, 160), orbitMaterial);
-  orbitLine.scale.x = 1.42;
-  orbitLine.rotation.x = Math.PI / 2;
-  group.add(orbitLine);
-
-  const disposables = [orbitLine.geometry, orbitMaterial];
   techStack.forEach((label, index) => {
     const texture = createTechLabelTexture(label);
     const material = new THREE.MeshBasicMaterial({
@@ -187,37 +176,6 @@ function createHeroParticles(count = 1100) {
   };
 
   return points;
-}
-
-function createHeroGrid() {
-  const group = new THREE.Group();
-  const material = new THREE.LineBasicMaterial({
-    color: 0x0ea5e9,
-    transparent: true,
-    opacity: 0.14,
-  });
-
-  for (let i = -8; i <= 8; i += 1) {
-    const horizontalGeometry = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(-10, -3.5, i),
-      new THREE.Vector3(10, -3.5, i),
-    ]);
-    const verticalGeometry = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(i * 1.25, -3.5, -8),
-      new THREE.Vector3(i * 1.25, -3.5, 8),
-    ]);
-    group.add(new THREE.Line(horizontalGeometry, material));
-    group.add(new THREE.Line(verticalGeometry, material));
-  }
-
-  group.rotation.x = -0.7;
-  group.position.z = -3.6;
-  group.userData.dispose = () => {
-    group.children.forEach((line) => line.geometry.dispose());
-    material.dispose();
-  };
-
-  return group;
 }
 
 function createParticleField(count = 900) {
@@ -304,9 +262,8 @@ export async function createPortfolioScene({ canvas, projects, profile }) {
   scene.add(heroGroup, workGroup, aboutGroup, contactGroup);
 
   const heroParticles = createHeroParticles();
-  const heroGrid = createHeroGrid();
   const techOrbit = createTechOrbit();
-  heroGroup.add(heroParticles, heroGrid, techOrbit);
+  heroGroup.add(heroParticles, techOrbit); // grid removed
 
   const projectCarousel = createProjectCarousel(THREE, projects);
   projectCarousel.position.z = -3;
@@ -368,7 +325,6 @@ export async function createPortfolioScene({ canvas, projects, profile }) {
     projectCarousel,
     aboutShape,
     heroParticles,
-    heroGrid,
     techOrbit,
     sections: [
       { group: heroGroup },
