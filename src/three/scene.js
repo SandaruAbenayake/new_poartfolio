@@ -6,7 +6,7 @@ import { applyScrollAnimation } from "./scrollAnimation";
 // Each entry: slug = simple-icons CDN slug, color = brand hex
 const techStack = [
   { label: "HTML",             slug: "html5",       color: "#e34f26" },
-  { label: "CSS",              slug: "css",        color: "#1572b6" },
+  { label: "CSS",              slug: "css",         color: "#1572b6" },
   { label: "JavaScript",       slug: "javascript",  color: "#f7df1e" },
   { label: "React",            slug: "react",       color: "#61dafb" },
   { label: "Flutter",          slug: "flutter",     color: "#02569b" },
@@ -49,32 +49,16 @@ async function createTechIconTexture(slug, brandColor) {
   const ctx = canvas.getContext("2d");
   ctx.scale(pixelRatio, pixelRatio);
 
-  // Dark circle background
   ctx.clearRect(0, 0, size, size);
-  ctx.beginPath();
-  ctx.arc(size / 2, size / 2, size / 2 - 4, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(3, 7, 18, 0.85)";
-  ctx.fill();
 
-  // Neon glow ring in brand color
-  ctx.beginPath();
-  ctx.arc(size / 2, size / 2, size / 2 - 4, 0, Math.PI * 2);
-  ctx.strokeStyle = brandColor;
-  ctx.lineWidth = 3;
-  ctx.shadowColor = brandColor;
-  ctx.shadowBlur = 24;
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-
-  // Draw brand SVG icon centered with glow
   const iconUrl = await loadSimpleIcon(slug, brandColor);
   if (iconUrl) {
     await new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
-        const padding = size * 0.25;
+        const padding = size * 0.15;
         ctx.shadowColor = brandColor;
-        ctx.shadowBlur = 18;
+        ctx.shadowBlur = 28;
         ctx.drawImage(img, padding, padding, size - padding * 2, size - padding * 2);
         ctx.shadowBlur = 0;
         resolve();
@@ -94,7 +78,6 @@ async function createTechOrbit() {
   const group = new THREE.Group();
   const disposables = [];
 
-  // Load all icons in parallel
   await Promise.all(
     techStack.map(async ({ slug, color }, index) => {
       const texture = await createTechIconTexture(slug, color);
@@ -159,6 +142,93 @@ function createTextPlane(lines, width = 12, height = 6) {
     transparent: true,
     opacity: 1,
     depthWrite: false,
+  });
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
+  mesh.userData.dispose = () => {
+    texture.dispose();
+    material.dispose();
+    mesh.geometry.dispose();
+  };
+
+  return mesh;
+}
+
+// Right-side text panel: title + cyan underline + word-wrapped bio
+function createAboutTextPlane(width = 10, height = 7) {
+  const cw = 1024;
+  const ch = 720;
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+  const canvas = document.createElement("canvas");
+  canvas.width = cw * pixelRatio;
+  canvas.height = ch * pixelRatio;
+
+  const ctx = canvas.getContext("2d");
+  ctx.scale(pixelRatio, pixelRatio);
+  ctx.clearRect(0, 0, cw, ch);
+
+  // Title — left-aligned on its panel
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.font = "900 80px Inter, Arial, sans-serif";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText("About Me", 40, 30);
+
+  // Cyan accent underline
+  ctx.beginPath();
+  ctx.moveTo(40, 122);
+  ctx.lineTo(200, 122);
+  ctx.strokeStyle = "#38bdf8";
+  ctx.lineWidth = 4;
+  ctx.shadowColor = "#38bdf8";
+  ctx.shadowBlur = 14;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Body paragraph — word-wrapped, left-aligned
+  const bodyText =
+    "I'm a passionate Full Stack Developer who thrives on building intuitive, " +
+    "accessible, and user-centric applications. I believe that great software is " +
+    "not just functional-it's also elegant, inclusive, and delightful to use. " +
+    "With experience across both frontend and backend technologies, I specialize " +
+    "in crafting seamless digital experiences that bridge the gap between design " +
+    "and functionality. Whether it's developing responsive user interfaces or " +
+    "designing scalable backend systems, I enjoy every step of the process.";
+
+  const fontSize = 26;
+  const lineHeight = 44;
+  const maxLineWidth = cw - 80;
+  let y = 158;
+
+  ctx.font = `400 ${fontSize}px Inter, Arial, sans-serif`;
+  ctx.fillStyle = "#94a3b8";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+
+  const words = bodyText.split(" ");
+  let line = "";
+
+  words.forEach((word, i) => {
+    const test = line + (line ? " " : "") + word;
+    if (ctx.measureText(test).width > maxLineWidth && line) {
+      ctx.fillText(line, 40, y);
+      line = word;
+      y += lineHeight;
+    } else {
+      line = test;
+    }
+    if (i === words.length - 1) ctx.fillText(line, 40, y);
+  });
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
+
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    opacity: 1,
+    depthWrite: false,
+    side: THREE.DoubleSide,
   });
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
   mesh.userData.dispose = () => {
@@ -291,23 +361,24 @@ export async function createPortfolioScene({ canvas, projects, profile }) {
   scene.add(heroGroup, workGroup, aboutGroup, contactGroup);
 
   const heroParticles = createHeroParticles();
-  // async — fetches icons from cdn.simpleicons.org in parallel
   const techOrbit = await createTechOrbit();
   heroGroup.add(heroParticles, techOrbit);
 
-  const projectCarousel = createProjectCarousel(THREE, projects);
+  const projectCarousel = createProjectCarousel(THREE, projects, camera);
   projectCarousel.position.z = -3;
   workGroup.add(
     createTextPlane(
-      [{ text: "Selected Work", y: 390, font: "800 92px Inter, Arial, sans-serif", color: "#ffffff" }],
+      [{ text: "Projects", y: 390, font: "800 92px Inter, Arial, sans-serif", color: "#ffffff" }],
       12,
       5.5
     )
   );
   workGroup.add(projectCarousel);
 
+  // ── About section ──────────────────────────────────────────
+  // Icosahedron: pushed left, vertically centered
   const aboutShape = new THREE.Mesh(
-    new THREE.IcosahedronGeometry(3.1, 2),
+    new THREE.IcosahedronGeometry(2.2, 2),
     new THREE.MeshStandardMaterial({
       color: 0x14b8a6,
       roughness: 0.34,
@@ -317,19 +388,14 @@ export async function createPortfolioScene({ canvas, projects, profile }) {
       wireframe: true,
     })
   );
-  aboutShape.position.set(-4.8, 0, -1);
+  aboutShape.position.set(-5.5, 0, 0);
   aboutGroup.add(aboutShape);
-  aboutGroup.add(
-    createTextPlane(
-      [
-        { text: "About", y: 250, font: "900 92px Inter, Arial, sans-serif", color: "#ffffff" },
-        { text: "Creative frontend, full-stack systems, and applied ML.", y: 390, font: "600 36px Inter, Arial, sans-serif", color: "#d1d5db" },
-        { text: "Interfaces with depth. Code with a job to do.", y: 456, font: "500 30px Inter, Arial, sans-serif", color: "#94a3b8" },
-      ],
-      13,
-      6
-    )
-  );
+
+  // Text panel: pushed right, vertically centered, no overlap
+  const aboutText = createAboutTextPlane(10, 7);
+  aboutText.position.set(2.2, 0, 0);
+  aboutGroup.add(aboutText);
+  // ───────────────────────────────────────────────────────────
 
   contactGroup.add(
     createTextPlane(
