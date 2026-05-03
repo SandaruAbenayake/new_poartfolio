@@ -6,7 +6,7 @@ import { applyScrollAnimation } from "./scrollAnimation";
 // Each entry: slug = simple-icons CDN slug, color = brand hex
 const techStack = [
   { label: "HTML",             slug: "html5",       color: "#e34f26" },
-  { label: "CSS",              slug: "css3",        color: "#1572b6" },
+  { label: "CSS",              slug: "css",        color: "#1572b6" },
   { label: "JavaScript",       slug: "javascript",  color: "#f7df1e" },
   { label: "React",            slug: "react",       color: "#61dafb" },
   { label: "Flutter",          slug: "flutter",     color: "#02569b" },

@@ -66,7 +66,7 @@ a {
 }
 
 .hero-title {
-  max-width: min(1120px, 94vw);
+  max-width: min(1120px,);
   margin: 0;
   color: #ffffff;
   font-size: clamp(3.2rem, 9vw, 8.8rem);
@@ -87,7 +87,7 @@ a {
 }
 
 .hero-subtitle {
-  margin: 26px 0 0;
+  margin: 200px 0 0;
   color: rgba(226, 232, 240, 0.78);
   font-size: clamp(1.15rem, 2.1vw, 2rem);
   font-weight: 600;
