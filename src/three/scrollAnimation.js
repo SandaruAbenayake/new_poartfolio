@@ -1,43 +1,60 @@
 const sectionDepth = 30;
 
+// ── Opacity helper ────────────────────────────────────────────────────
 function setGroupOpacity(group, opacity) {
-  const applyMaterialOpacity = (material) => {
+  const apply = (material) => {
+    if (!material.transparent) material.transparent = true;
     if (material.userData.baseOpacity === undefined) {
-      material.userData.baseOpacity = material.opacity;
+      material.userData.baseOpacity =
+        material.opacity !== undefined ? material.opacity : 1;
     }
-
     material.opacity = material.userData.baseOpacity * opacity;
+    material.needsUpdate = true;
   };
 
   group.traverse((child) => {
     if (!child.material) return;
-
     if (Array.isArray(child.material)) {
-      child.material.forEach(applyMaterialOpacity);
-      return;
+      child.material.forEach(apply);
+    } else {
+      apply(child.material);
     }
-
-    applyMaterialOpacity(child.material);
   });
 }
 
+// ── Main ──────────────────────────────────────────────────────────────
+// progress: 0.0 = hero  →  1.0 = contact
+// sections: [heroGroup(0), aboutGroup(1), workGroup(2), contactGroup(3)]
 export function applyScrollAnimation(state, progress) {
-  const eased = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-  const travel = eased * sectionDepth * 3;
+  // Ease in-out cubic
+  const eased =
+    progress < 0.5
+      ? 4 * progress * progress * progress
+      : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
-  state.cameraRig.position.z = -travel;
-  state.heroGroup.position.z = 0;
-  state.aboutGroup.position.z = -sectionDepth;
-  state.workGroup.position.z = -sectionDepth * 2;
+  // Camera travels sectionDepth units per section (3 gaps for 4 sections)
+  state.cameraRig.position.z = -eased * sectionDepth * 3;
+
+  // Fixed world positions — never move
+  state.heroGroup.position.z    =  0;
+  state.aboutGroup.position.z   = -sectionDepth * 1;
+  state.workGroup.position.z    = -sectionDepth * 2;
   state.contactGroup.position.z = -sectionDepth * 3;
 
-  state.sections.forEach((section, index) => {
-    const sectionProgress = Math.max(0, 1 - Math.abs(progress * 3 - index) * 1.18);
-    const opacity = Math.pow(sectionProgress, 1.8);
+  // ── Per-section fade + scale ─────────────────────────────────────────
+  // scrollIndex goes 0 → 3 across the full scroll
+  const scrollIndex = progress * 3; // (totalSections - 1)
 
-    section.group.scale.setScalar(0.86 + sectionProgress * 0.14);
+  state.sections.forEach((section, index) => {
+    const dist     = Math.abs(scrollIndex - index);        // 0 = current section
+    const visible  = Math.max(0, 1 - dist / 0.85);        // tight fade window
+    const opacity  = Math.pow(visible, 1.6);
+    const scale    = 0.88 + visible * 0.12;
+
+    section.group.scale.setScalar(scale);
     setGroupOpacity(section.group, opacity);
   });
 
-  state.projectCarousel.rotation.y = progress * Math.PI * 2 + Math.sin(progress * Math.PI) * 0.3;
+  // NOTE: projectCarousel.rotation.y is driven by render() for continuous spin.
+  // We intentionally do NOT touch it here to avoid fighting the render loop.
 }
