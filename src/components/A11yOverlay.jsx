@@ -36,9 +36,10 @@ function A11yOverlay({ profile, projects }) {
 
         <section id="contact" aria-label="Contact">
           <h2>Contact</h2>
-          <a href={`mailto:${profile.contact.email}`}>{profile.contact.email}</a>
-          <a href={profile.contact.linkedin}>LinkedIn</a>
+          <a href={`mailto:${profile.contact.email}`}>Email</a>
+          <a href={profile.contact.whatsapp}>WhatsApp: {profile.contact.phone}</a>
           <a href={profile.contact.github}>GitHub</a>
+          <a href={profile.contact.linkedin}>LinkedIn</a>
         </section>
       </main>
     </div>

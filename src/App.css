@@ -66,7 +66,7 @@ a {
 
 .project-carousel-control {
   display: grid;
-  place-items: center;
+  /* place-items: center; */
   width: 56px;
   height: 56px;
   border: 1px solid rgba(148, 163, 184, 0.42);
@@ -188,11 +188,126 @@ a {
   transform: translateX(-50%) translateY(12px);
 }
 
+.contact-panel {
+  position: fixed;
+  left: 50%;
+  top: 60%;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(112px, 1fr));
+  gap: 16px;
+  width: min(88vw, 760px);
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -42%) scale(0.94);
+  transition: opacity 360ms ease, transform 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.contact-panel.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.contact-link {
+  position: relative;
+  display: grid;
+  min-height: 112px;
+  place-items: center;
+  gap: 10px;
+  overflow: hidden;
+  border-radius: 8px;
+  color: #ffffff;
+  text-decoration: none;
+  background: rgba(15, 23, 42, 0.72);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transform: translateY(16px);
+  animation: contactFloat 3.8s ease-in-out infinite;
+  transition: transform 220ms ease, background 220ms ease, box-shadow 220ms ease;
+}
+
+.contact-link::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  opacity: 0.18;
+  background: radial-gradient(circle at top left, currentColor, transparent 54%);
+}
+
+.contact-link svg {
+  position: relative;
+  width: 34px;
+  height: 34px;
+}
+
+.contact-link span {
+  position: relative;
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
+.contact-link:hover,
+.contact-link:focus-visible {
+  outline: none;
+  transform: translateY(-6px) scale(1.04);
+  background: rgba(15, 23, 42, 0.88);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.44);
+}
+
+.contact-link-email {
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.32);
+  animation-delay: 0ms;
+}
+
+.contact-link-whatsapp {
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.32);
+  animation-delay: 130ms;
+}
+
+.contact-link-github {
+  color: #f8fafc;
+  border: 1px solid rgba(248, 250, 252, 0.28);
+  animation-delay: 260ms;
+}
+
+.contact-link-linkedin {
+  color: #60a5fa;
+  border: 1px solid rgba(96, 165, 250, 0.32);
+  animation-delay: 390ms;
+}
+
 .scroll-spacer {
   position: relative;
   z-index: 1;
   height: calc(var(--vh) * 480);
   pointer-events: none;
+}
+
+@keyframes contactFloat {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -8px;
+  }
+}
+
+@media (max-width: 720px) {
+  .contact-panel {
+    top: 61%;
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+    gap: 12px;
+    width: calc(100vw - 36px);
+  }
+
+  .contact-link {
+    min-height: 96px;
+  }
 }
 
 .scroll-section-marker {

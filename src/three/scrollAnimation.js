@@ -1,5 +1,11 @@
 const sectionDepth = 30;
 
+export function getEasedScrollProgress(progress) {
+  return progress < 0.5
+    ? 4 * progress * progress * progress
+    : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+}
+
 // ── Opacity helper ────────────────────────────────────────────────────
 function setGroupOpacity(group, opacity) {
   group.userData.sectionOpacity = opacity;
@@ -28,11 +34,7 @@ function setGroupOpacity(group, opacity) {
 // progress: 0.0 = hero  →  1.0 = contact
 // sections: [heroGroup(0), aboutGroup(1), workGroup(2), contactGroup(3)]
 export function applyScrollAnimation(state, progress) {
-  // Ease in-out cubic
-  const eased =
-    progress < 0.5
-      ? 4 * progress * progress * progress
-      : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+  const eased = getEasedScrollProgress(progress);
 
   // Camera travels sectionDepth units per section (3 gaps for 4 sections)
   state.cameraRig.position.z = -eased * sectionDepth * 3;
@@ -45,7 +47,7 @@ export function applyScrollAnimation(state, progress) {
 
   // ── Per-section fade + scale ─────────────────────────────────────────
   // scrollIndex goes 0 → 3 across the full scroll
-  const scrollIndex = progress * 3; // (totalSections - 1)
+  const scrollIndex = eased * 3; // (totalSections - 1)
 
   state.sections.forEach((section, index) => {
     const dist     = Math.abs(scrollIndex - index);        // 0 = current section

@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { applyMouseAnimation } from "./mouseAnimation";
 import { createProjectCarousel } from "./projectCarousel";
-import { applyScrollAnimation } from "./scrollAnimation";
+import { applyScrollAnimation, getEasedScrollProgress } from "./scrollAnimation";
 
 // Each entry: slug = simple-icons CDN slug, color = brand hex
 const techStack = [
@@ -102,29 +102,57 @@ async function createTechOrbit() {
   return group;
 }
 
-function createTextPlane(lines, width = 12, height = 6) {
+function createContactCardPlane(width = 11.5, height = 7) {
+  const cw = 1400;
+  const ch = 860;
   const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-  const canvas     = document.createElement("canvas");
-  canvas.width     = 1400 * pixelRatio;
-  canvas.height    = 760  * pixelRatio;
-  const context    = canvas.getContext("2d");
-  context.scale(pixelRatio, pixelRatio);
-  context.clearRect(0, 0, 1400, 760);
-  context.textAlign    = "center";
-  context.textBaseline = "middle";
+  const canvas = document.createElement("canvas");
+  canvas.width = cw * pixelRatio;
+  canvas.height = ch * pixelRatio;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(pixelRatio, pixelRatio);
+  ctx.clearRect(0, 0, cw, ch);
 
-  lines.forEach((line) => {
-    context.font      = line.font;
-    context.fillStyle = line.color;
-    context.fillText(line.text, 700, line.y);
-  });
+  const cardX = 110;
+  const cardY = 78;
+  const cardW = 1180;
+  const cardH = 520;
 
-  const texture  = new THREE.CanvasTexture(canvas);
+  ctx.fillStyle = "rgba(3, 7, 18, 0.7)";
+  ctx.beginPath();
+  ctx.roundRect(cardX, cardY, cardW, cardH, 34);
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(255, 255, 255, 0)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.font = "900 86px Inter, Arial, sans-serif";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText("Contact Me", cardX + 70, cardY + 56);
+
+  ctx.font = "600 30px Inter, Arial, sans-serif";
+  ctx.fillStyle = "#38bdf8";
+  ctx.fillText("Let's build something useful.", cardX + 76, cardY + 158);
+
+  ctx.font = "700 44px Inter, Arial, sans-serif";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.88)";
+  ctx.fillText("Email  /  WhatsApp  /  GitHub  /  LinkedIn", cardX + 76, cardY + 252);
+
+  const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
   const material = new THREE.MeshBasicMaterial({
-    map: texture, transparent: true, opacity: 1, depthWrite: false,
+    map: texture,
+    transparent: true,
+    opacity: 1,
+    depthWrite: false,
+    side: THREE.DoubleSide,
   });
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
+  mesh.userData.isContactCard = true;
   mesh.userData.dispose = () => {
     texture.dispose(); material.dispose(); mesh.geometry.dispose();
   };
@@ -231,7 +259,7 @@ function createHeroParticles(count = 1100) {
   return points;
 }
 
-function createParticleField(count = 900) {
+function createSectionParticles(count = 950) {
   const geometry  = new THREE.BufferGeometry();
   const positions = new Float32Array(count * 3);
   const colors    = new Float32Array(count * 3);
@@ -239,10 +267,10 @@ function createParticleField(count = 900) {
 
   for (let i = 0; i < count; i++) {
     const s = i * 3;
-    positions[s]     = (Math.random() - 0.5) * 42;
-    positions[s + 1] = (Math.random() - 0.5) * 22;
-    positions[s + 2] = (Math.random() - 0.5) * 110;
-    color.setHSL((i / count) * 0.65 + 0.08, 0.78, 0.62);
+    positions[s]     = (Math.random() - 0.5) * 26;
+    positions[s + 1] = (Math.random() - 0.5) * 15;
+    positions[s + 2] = -8 + Math.random() * 8;
+    color.setHSL(0.58 + Math.random() * 0.04, 0.22, 0.82 + Math.random() * 0.14);
     colors[s] = color.r; colors[s + 1] = color.g; colors[s + 2] = color.b;
   }
 
@@ -250,7 +278,34 @@ function createParticleField(count = 900) {
   geometry.setAttribute("color",    new THREE.BufferAttribute(colors,    3));
 
   const material = new THREE.PointsMaterial({
-    size: 0.055, transparent: true, opacity: 0.7,
+    size: 0.035, transparent: true, opacity: 0.58,
+    vertexColors: true, depthWrite: false,
+  });
+  const points = new THREE.Points(geometry, material);
+  points.userData.dispose = () => { geometry.dispose(); material.dispose(); };
+  return points;
+}
+
+function createParticleField(count = 2200) {
+  const geometry  = new THREE.BufferGeometry();
+  const positions = new Float32Array(count * 3);
+  const colors    = new Float32Array(count * 3);
+  const color     = new THREE.Color();
+
+  for (let i = 0; i < count; i++) {
+    const s = i * 3;
+    positions[s]     = (Math.random() - 0.5) * 46;
+    positions[s + 1] = (Math.random() - 0.5) * 24;
+    positions[s + 2] = -45 + (Math.random() - 0.5) * 150;
+    color.setHSL(0.58 + Math.random() * 0.04, 0.35, 0.84 + Math.random() * 0.12);
+    colors[s] = color.r; colors[s + 1] = color.g; colors[s + 2] = color.b;
+  }
+
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute("color",    new THREE.BufferAttribute(colors,    3));
+
+  const material = new THREE.PointsMaterial({
+    size: 0.045, transparent: true, opacity: 0.78,
     vertexColors: true, depthWrite: false,
   });
   const points = new THREE.Points(geometry, material);
@@ -309,10 +364,20 @@ export async function createPortfolioScene({ canvas, projects, profile }) {
   const techOrbit     = await createTechOrbit();
   heroGroup.add(heroParticles, techOrbit);
 
+  // White dot backgrounds for every content section, matching the hero feel.
+  const aboutParticles   = createSectionParticles();
+  const workParticles    = createSectionParticles();
+  const contactParticles = createSectionParticles();
+  aboutGroup.add(aboutParticles);
+  workGroup.add(workParticles);
+  contactGroup.add(contactParticles);
+
   // ── Work / Projects ───────────────────────────────────────────────
   // carousel at z=0 inside workGroup — NO extra z offset needed
   // workGroup itself is positioned by scrollAnimation at z = -sectionDepth*2
   const projectCarousel = createProjectCarousel(THREE, projects, camera);
+  projectCarousel.scale.setScalar(1.08);
+  projectCarousel.position.y = -0.22;
   workGroup.add(projectCarousel);
 
   // Attach click/hover listeners once we have the renderer canvas
@@ -334,17 +399,9 @@ export async function createPortfolioScene({ canvas, projects, profile }) {
   aboutGroup.add(aboutText);
 
   // ── Contact ───────────────────────────────────────────────────────
-  contactGroup.add(
-    createTextPlane(
-      [
-        { text: "Let's Build",                                    y: 290, font: "900 108px Inter, Arial, sans-serif", color: "#ffffff"  },
-        { text: profile.contact.github.replace("https://", ""),   y: 430, font: "600 38px Inter, Arial, sans-serif",  color: "#f59e0b"  },
-        { text: profile.contact.email,                            y: 500, font: "500 34px Inter, Arial, sans-serif",  color: "#d1d5db"  },
-      ],
-      13,
-      6
-    )
-  );
+  const contactCard = createContactCardPlane();
+  contactCard.position.set(0, -0.1, 0);
+  contactGroup.add(contactCard);
 
   // ── State ─────────────────────────────────────────────────────────
   const state = {
@@ -359,6 +416,10 @@ export async function createPortfolioScene({ canvas, projects, profile }) {
     projectCarousel,
     aboutShape,
     heroParticles,
+    aboutParticles,
+    workParticles,
+    contactParticles,
+    contactCard,
     techOrbit,
     // ORDER MUST MATCH scrollAnimation section indices:
     // 0=hero  1=about  2=work  3=contact
@@ -389,7 +450,8 @@ export async function createPortfolioScene({ canvas, projects, profile }) {
     updateScroll(progress) {
       state.scroll = progress;
       applyScrollAnimation(state, progress);
-      projectCarousel.userData.setEnabled?.(progress > 0.46 && progress < 0.78);
+      const eased = getEasedScrollProgress(progress);
+      projectCarousel.userData.setEnabled?.(eased > 0.52 && eased < 0.82);
     },
 
     updateMouse(mouse) {
@@ -410,6 +472,9 @@ export async function createPortfolioScene({ canvas, projects, profile }) {
       // Global particle drift
       particles.rotation.y      = time * 0.000025;
       heroParticles.rotation.y  = time * 0.000035;
+      aboutParticles.rotation.y = time * 0.000035;
+      workParticles.rotation.y  = time * 0.000035;
+      contactParticles.rotation.y = time * 0.000035;
 
       // Hero particles follow mouse
       heroParticles.position.x += (state.mouse.x * 0.3  - heroParticles.position.x) * 0.03;
@@ -437,6 +502,10 @@ export async function createPortfolioScene({ canvas, projects, profile }) {
       // About shape spin
       aboutShape.rotation.x += 0.0025;
       aboutShape.rotation.y += 0.0035;
+
+      // Contact card: quiet creative float.
+      contactCard.position.y = -0.1 + Math.sin(t * 1.1) * 0.08;
+      contactCard.rotation.z = Math.sin(t * 0.8) * 0.012;
 
       // Mouse camera tilt
       applyMouseAnimation(state, state.mouse);

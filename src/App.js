@@ -5,14 +5,17 @@ import Main from "./components/Main";
 import { SpringMouseProvider } from "./components/SpringMouseProvider";
 import ViewportHeightReporter from "./components/ViewportHeightReporter";
 import { profile, projects } from "./data/projects";
+import { ThemeProvider } from "./context/ThemeContext";
 
 function App() {
   return (
-    <SpringMouseProvider>
-      <ViewportHeightReporter />
-      <A11yOverlay profile={profile} projects={projects} />
-      <Main profile={profile} projects={projects} />
-    </SpringMouseProvider>
+    <ThemeProvider>
+      <SpringMouseProvider>
+        <ViewportHeightReporter />
+        <A11yOverlay profile={profile} projects={projects} />
+        <Main profile={profile} projects={projects} />
+      </SpringMouseProvider>
+    </ThemeProvider>
   );
 }
 

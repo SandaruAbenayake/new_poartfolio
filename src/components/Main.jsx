@@ -1,8 +1,23 @@
 import Lenis from "@studio-freight/lenis";
+import EmailIcon from "@mui/icons-material/Email";
+import GitHubIcon from "@mui/icons-material/GitHub";
+import LinkedInIcon from "@mui/icons-material/LinkedIn";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import React, { useEffect, useRef, useState } from "react";
+import Navbar from "../component/Navbar";
 import { createPortfolioScene } from "../three/scene";
+import { getEasedScrollProgress } from "../three/scrollAnimation";
 import HomePageTrigger from "./HomePageTrigger";
 import { useSpringMouse } from "./SpringMouseProvider";
+
+function getScrollProgressForSection(sectionProgress) {
+  if (sectionProgress <= 0) return 0;
+  if (sectionProgress >= 1) return 1;
+  if (sectionProgress < 0.5) {
+    return Math.cbrt(sectionProgress / 4);
+  }
+  return 1 - Math.cbrt((1 - sectionProgress) / 4);
+}
 
 function Main({ projects, profile }) {
   const canvasRef = useRef(null);
@@ -13,7 +28,20 @@ function Main({ projects, profile }) {
   const [hasScrolledHero, setHasScrolledHero] = useState(false);
   const [hasLeftHero, setHasLeftHero] = useState(false);
   const [isProjectNavVisible, setIsProjectNavVisible] = useState(false);
+  const [isContactVisible, setIsContactVisible] = useState(false);
   const { subscribe } = useSpringMouse();
+  const sectionTargets = {
+    home: getScrollProgressForSection(0),
+    about: getScrollProgressForSection(1 / 3),
+    projects: getScrollProgressForSection(2 / 3),
+    contact: getScrollProgressForSection(1),
+  };
+
+  const handleNavigate = (section) => {
+    const progress = sectionTargets[section] ?? 0;
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    lenisRef.current?.scrollTo(Math.max(0, maxScroll * progress));
+  };
 
   useEffect(() => {
     if (process.env.NODE_ENV === "test") {
@@ -44,10 +72,12 @@ function Main({ projects, profile }) {
       });
       lenisRef.current = lenis;
       lenis.on("scroll", ({ progress }) => {
+        const eased = getEasedScrollProgress(progress);
         scene.updateScroll(progress);
         setHasScrolledHero(progress > 0.012);
         setHasLeftHero(progress > 0.08);
-        setIsProjectNavVisible(progress > 0.46 && progress < 0.78);
+        setIsProjectNavVisible(eased > 0.52 && eased < 0.82);
+        setIsContactVisible(eased > 0.86);
       });
 
       const onVisibilityChange = () => {
@@ -87,6 +117,7 @@ function Main({ projects, profile }) {
   return (
     <>
       <canvas ref={canvasRef} className="three-canvas" aria-hidden="true" />
+      <Navbar onNavigate={handleNavigate} />
       <div
         className={`project-carousel-controls ${isProjectNavVisible ? "is-visible" : ""}`}
         aria-hidden={!isProjectNavVisible}
@@ -128,6 +159,49 @@ function Main({ projects, profile }) {
       <div className={`hero-scroll-hint ${hasScrolledHero ? "is-hidden" : ""}`} aria-hidden="true">
         <span />
       </div>
+      <section
+        className={`contact-panel ${isContactVisible ? "is-visible" : ""}`}
+        aria-label="Contact links"
+      >
+        <a
+          className="contact-link contact-link-email"
+          href={`mailto:${profile.contact.email}`}
+          tabIndex={isContactVisible ? 0 : -1}
+        >
+          <EmailIcon />
+          <span>Email</span>
+        </a>
+        <a
+          className="contact-link contact-link-whatsapp"
+          href={profile.contact.whatsapp}
+          target="_blank"
+          rel="noopener noreferrer"
+          tabIndex={isContactVisible ? 0 : -1}
+        >
+          <WhatsAppIcon />
+          <span>WhatsApp</span>
+        </a>
+        <a
+          className="contact-link contact-link-github"
+          href={profile.contact.github}
+          target="_blank"
+          rel="noopener noreferrer"
+          tabIndex={isContactVisible ? 0 : -1}
+        >
+          <GitHubIcon />
+          <span>GitHub</span>
+        </a>
+        <a
+          className="contact-link contact-link-linkedin"
+          href={profile.contact.linkedin}
+          target="_blank"
+          rel="noopener noreferrer"
+          tabIndex={isContactVisible ? 0 : -1}
+        >
+          <LinkedInIcon />
+          <span>LinkedIn</span>
+        </a>
+      </section>
       <HomePageTrigger />
     </>
   );

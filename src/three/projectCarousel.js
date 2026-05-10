@@ -130,12 +130,12 @@ function createHeadingMesh(THREERef) {
     depthWrite: false,
   });
   const mesh = new THREERef.Mesh(
-    new THREERef.PlaneGeometry(10, 1.65),
+    new THREERef.PlaneGeometry(8.4, 1.38),
     material
   );
 
-  // Centred above the orbit ring
-  mesh.position.set(0, 5.2, 0);
+  // Keep the heading close to the active project card.
+  mesh.position.set(0, 2.9, 0);
 
   mesh.userData.dispose = () => {
     texture.dispose();
@@ -150,7 +150,7 @@ function createHeadingMesh(THREERef) {
 export function createProjectCarousel(THREERef, projects, camera) {
   const group = new THREERef.Group();
   const disposables = [];
-  const spacing = 4.45;
+  const spacing = 5.05;
   const maxIndex = Math.max(projects.length - 1, 0);
   let currentIndex = 0;
   let targetIndex = 0;
@@ -175,11 +175,11 @@ export function createProjectCarousel(THREERef, projects, camera) {
       transparent: true,
       side: THREERef.DoubleSide,
     });
-    const geo = new THREERef.PlaneGeometry(3.5, 2.2);
+    const geo = new THREERef.PlaneGeometry(4.15, 2.6);
     const card = new THREERef.Mesh(geo, mediaMat);
     const cardGroup = new THREERef.Group();
 
-    card.position.set(0, 0.62, 0);
+    card.position.set(0, 0.56, 0);
     card.userData = { project, index };
 
     // Info panel sits below the media, keeping the video/photo unobstructed.
@@ -190,9 +190,9 @@ export function createProjectCarousel(THREERef, projects, camera) {
       depthWrite: false,
       side: THREERef.DoubleSide,
     });
-    const panelGeo = new THREERef.PlaneGeometry(3.5, 1.3);
+    const panelGeo = new THREERef.PlaneGeometry(4.15, 1.34);
     const panel = new THREERef.Mesh(panelGeo, panelMat);
-    panel.position.set(0, -1.18, 0.01);
+    panel.position.set(0, -1.43, 0.01);
     panel.userData = { isInfoPanel: true, project, index };
 
     cardGroup.add(card, panel);

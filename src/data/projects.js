@@ -5,6 +5,8 @@ export const profile = {
     "I build practical web, mobile, and machine learning projects with a strong eye for clean interfaces and reliable systems. My work spans React, Flutter, Java, PHP, Python, OpenCV, Firebase, and full-stack application development.",
   contact: {
     email: "maggonageabenayake@gmail.com",
+    phone: "+94 71 300 5158",
+    whatsapp: "https://wa.me/94713005158",
     linkedin: "https://www.linkedin.com/in/sandaru-abenayake-768628252/",
     github: "https://github.com/SandaruAbenayake",
   },
