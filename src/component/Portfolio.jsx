@@ -87,7 +87,7 @@ const PortfolioCard = ({ project, isDark }) => {
         sx={{
           width: 300,
           height: 400,
-          background: isDark ? 'rgba(30, 40, 70, 0.8)' : 'rgba(255, 255, 255, 0.85)',
+          background: isDark ? 'rgba(30, 40, 70, 0.8)' : 'rgba(255, 255, 255, 0.10)',
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)',
           border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.2)'}`,
@@ -136,20 +136,22 @@ const PortfolioCard = ({ project, isDark }) => {
             </Typography>
             {project.github && (
               <IconButton
-                component="a"
-                href={project.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                size="small"
-                sx={{
-                  ml: 1,
-                  backgroundColor: "	#b2b2b2", //
-                  color: "#0000002", //
-                  fontWeight: 500,
-                }}
-              >
-                <GitHubIcon fontSize="small" />
-              </IconButton>
+                  onClick={(e) => {
+                    e.stopPropagation(); // prevent parent click issues
+                    window.open(project.github, "_blank");
+                  }}
+                  size="small"
+                  sx={{
+                    ml: 1,
+                    background: "linear-gradient(45deg, #38bdf8, #818cf8)",
+                    color: "#ffffff", // 🔥 FIXED (visible)
+                    "&:hover": {
+                      background: "linear-gradient(45deg, #0ea5e9, #6366f1)",
+                    },
+                  }}
+                >
+                  <GitHubIcon fontSize="small" />
+                </IconButton>
             )}
           </Box>
 

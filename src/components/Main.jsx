@@ -12,6 +12,7 @@ function Main({ projects, profile }) {
   const isVisibleRef = useRef(true);
   const [hasScrolledHero, setHasScrolledHero] = useState(false);
   const [hasLeftHero, setHasLeftHero] = useState(false);
+  const [isProjectNavVisible, setIsProjectNavVisible] = useState(false);
   const { subscribe } = useSpringMouse();
 
   useEffect(() => {
@@ -46,6 +47,7 @@ function Main({ projects, profile }) {
         scene.updateScroll(progress);
         setHasScrolledHero(progress > 0.012);
         setHasLeftHero(progress > 0.08);
+        setIsProjectNavVisible(progress > 0.46 && progress < 0.78);
       });
 
       const onVisibilityChange = () => {
@@ -85,6 +87,29 @@ function Main({ projects, profile }) {
   return (
     <>
       <canvas ref={canvasRef} className="three-canvas" aria-hidden="true" />
+      <div
+        className={`project-carousel-controls ${isProjectNavVisible ? "is-visible" : ""}`}
+        aria-hidden={!isProjectNavVisible}
+      >
+        <button
+          type="button"
+          className="project-carousel-control"
+          aria-label="Previous project"
+          tabIndex={isProjectNavVisible ? 0 : -1}
+          onClick={() => sceneRef.current?.prevProject?.()}
+        >
+          &lsaquo;
+        </button>
+        <button
+          type="button"
+          className="project-carousel-control"
+          aria-label="Next project"
+          tabIndex={isProjectNavVisible ? 0 : -1}
+          onClick={() => sceneRef.current?.nextProject?.()}
+        >
+          &rsaquo;
+        </button>
+      </div>
       <section className={`hero-html ${hasLeftHero ? "is-hidden" : ""}`} aria-label="Hero introduction">
         <h1 className="hero-title" aria-label={profile.name}>
           {profile.name.split("").map((character, index) => (
