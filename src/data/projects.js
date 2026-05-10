@@ -16,21 +16,21 @@ export const projects = [
   {
     uid: "ml-palm-harvest",
     title: "ML Palm Harvest Project",
-    subtitle: "Machine Learning",
+    subtitle: "University Final Project",
     description: "Machine learning project predicting palm yield using Python.",
     image: "/images/icon.png",
     url: "https://github.com/Final-Year-Research-Oil-Plam",
     tags: ["Python", "Pandas", "YOLOv11", "OpenCV"],
   },
   {
-    uid: "pahana-edu-book-shop",
-    title: "Pahana EDU Book Shop",
-    subtitle: "Web App",
+    uid: "sk-saloon",
+    title: "SK Saloon",
+    subtitle: "Booking App",
     description:
-      "A Java Servlets-based web app for managing a bookstore with user and admin access.",
-    image: "/images/phahan-edu.png",
-    url: "https://github.com/SandaruAbenayake/pahana_edu",
-    tags: ["Java", "Servlets", "MySQL", "React", "MUI"],
+      "Salon booking system with date/time selection, mock payment sessions, admin dashboard, JWT auth, and owner approval for paid appointments.",
+    image: "/images/SK_Saloon.png",
+    url: "https://github.com/SandaruAbenayake/SK_saloon",
+    tags: ["React", "MUI", "Node.js", "Express", "MySQL", "JWT"],
   },
   {
     uid: "munchmix",
@@ -41,6 +41,16 @@ export const projects = [
     image: "/images/munchmix.jpg",
     url: "https://github.com/SandaruAbenayake/MunchMix",
     tags: ["PHP", "HTML", "CSS", "JavaScript"],
+  },
+  {
+    uid: "pahana-edu-book-shop",
+    title: "Pahana EDU Book Shop",
+    subtitle: "Web App",
+    description:
+      "A Java Servlets-based web app for managing a bookstore with user and admin access.",
+    image: "/images/phahan-edu.png",
+    url: "https://github.com/SandaruAbenayake/pahana_edu",
+    tags: ["Java", "Servlets", "MySQL", "React", "MUI"],
   },
   {
     uid: "flutter-restaurant-app",
@@ -69,14 +79,5 @@ export const projects = [
     video: "/videos/volume-balance.mp4",
     url: "https://github.com/SandaruAbenayake/volume-balance",
     tags: ["Python", "OpenCV", "MediaPipe"],
-  },
-  {
-    uid: "notes-app",
-    title: "Notes App",
-    subtitle: "MERN App",
-    description: "MERN stack notes app with CRUD operations and a clean UI.",
-    image: "/images/note-app.png",
-    url: "https://github.com/SandaruAbenayake/Notes-App",
-    tags: ["MongoDB", "Express", "React", "Node.js"],
   },
 ];

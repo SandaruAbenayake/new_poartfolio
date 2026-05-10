@@ -242,6 +242,10 @@ export function createProjectCarousel(THREERef, projects, camera) {
   const _mouse = new THREERef.Vector2();
   let _canvas = null;
 
+  function setCursor(cursor) {
+    document.body.style.cursor = cursor;
+  }
+
   function shouldIgnoreDomTarget(target) {
     return target?.closest?.(".project-carousel-control");
   }
@@ -271,13 +275,13 @@ export function createProjectCarousel(THREERef, projects, camera) {
 
   function onMouseMove(event) {
     if (!_canvas || !isEnabled || shouldIgnoreDomTarget(event.target)) {
-      if (_canvas) _canvas.style.cursor = "default";
+      setCursor("default");
       return;
     }
     if (!setMouseFromEvent(event)) return;
     raycaster.setFromCamera(_mouse, camera);
     const hits = raycaster.intersectObjects(cards, true);
-    _canvas.style.cursor = hits.length > 0 ? "pointer" : "default";
+    setCursor(hits.length > 0 ? "pointer" : "default");
   }
 
   function onPointerDown(event) {
@@ -314,6 +318,7 @@ export function createProjectCarousel(THREERef, projects, camera) {
       window.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
+      setCursor("default");
     }
     _canvas = canvas;
     window.addEventListener("click", onCardClick);
@@ -343,7 +348,7 @@ export function createProjectCarousel(THREERef, projects, camera) {
     isEnabled = enabled;
     if (!enabled) {
       dragStarted = false;
-      if (_canvas) _canvas.style.cursor = "default";
+      setCursor("default");
     }
   };
   group.userData.getState = () => ({ currentIndex: targetIndex, maxIndex });
