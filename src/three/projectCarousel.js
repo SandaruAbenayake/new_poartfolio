@@ -175,7 +175,7 @@ export function createProjectCarousel(THREERef, projects, camera) {
       transparent: true,
       side: THREERef.DoubleSide,
     });
-    const geo = new THREERef.PlaneGeometry(4.15, 2.6);
+    const geo = new THREERef.PlaneGeometry(4.00, 2.6);
     const card = new THREERef.Mesh(geo, mediaMat);
     const cardGroup = new THREERef.Group();
 
@@ -190,7 +190,7 @@ export function createProjectCarousel(THREERef, projects, camera) {
       depthWrite: false,
       side: THREERef.DoubleSide,
     });
-    const panelGeo = new THREERef.PlaneGeometry(4.15, 1.34);
+    const panelGeo = new THREERef.PlaneGeometry(4.00, 1.34);
     const panel = new THREERef.Mesh(panelGeo, panelMat);
     panel.position.set(0, -1.43, 0.01);
     panel.userData = { isInfoPanel: true, project, index };
