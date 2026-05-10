@@ -389,10 +389,19 @@ export async function createPortfolioScene({ canvas, projects, profile }) {
     updateScroll(progress) {
       state.scroll = progress;
       applyScrollAnimation(state, progress);
+      projectCarousel.userData.setEnabled?.(progress > 0.46 && progress < 0.78);
     },
 
     updateMouse(mouse) {
       state.mouse = mouse;
+    },
+
+    nextProject() {
+      projectCarousel.userData.next?.();
+    },
+
+    prevProject() {
+      projectCarousel.userData.prev?.();
     },
 
     render(time = 0) {
@@ -422,15 +431,8 @@ export async function createPortfolioScene({ canvas, projects, profile }) {
       });
 
       // ── Project carousel ────────────────────────────────────────
-      // Continuous slow spin — independent of scroll progress
-      projectCarousel.rotation.y += 0.004;
-
-      // Gentle bob on each card (skip index 0 = heading plane)
-      const cardCount = projectCarousel.children.length - 1; // exclude heading
-      projectCarousel.children.forEach((child, i) => {
-        if (i === 0) return; // heading — don't bob
-        child.position.y = Math.sin(t * 0.9 + i * ((Math.PI * 2) / Math.max(cardCount, 1))) * 0.28;
-      });
+      // Moves only when the selected project changes by button or drag.
+      projectCarousel.userData.animate?.(time);
 
       // About shape spin
       aboutShape.rotation.x += 0.0025;

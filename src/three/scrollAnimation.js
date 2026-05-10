@@ -2,6 +2,8 @@ const sectionDepth = 30;
 
 // ── Opacity helper ────────────────────────────────────────────────────
 function setGroupOpacity(group, opacity) {
+  group.userData.sectionOpacity = opacity;
+
   const apply = (material) => {
     if (!material.transparent) material.transparent = true;
     if (material.userData.baseOpacity === undefined) {
@@ -55,6 +57,6 @@ export function applyScrollAnimation(state, progress) {
     setGroupOpacity(section.group, opacity);
   });
 
-  // NOTE: projectCarousel.rotation.y is driven by render() for continuous spin.
-  // We intentionally do NOT touch it here to avoid fighting the render loop.
+  // Section opacity is stored on each group so per-frame animations can respect
+  // the scroll fade instead of making hidden sections visible again.
 }
